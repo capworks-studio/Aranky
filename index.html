@@ -1296,7 +1296,7 @@ function closeJoinModal() {
 
 // ============ GAME ============
 function startGame() {
-  if (isHost && Object.keys(players).length < 2)
+  if (isHost && Object.keys(players).length < 2) {
     showToast('Au moins 2 joueurs requis');
     return;
   }
@@ -1305,6 +1305,7 @@ function startGame() {
   gameTimer = GAME_DURATION;
   bullets = [];
   quitVotes = {};
+
   Object.keys(players).forEach(pid => {
     quitVotes[pid] = false;
     players[pid].x = Math.random() * CANVAS_W;
@@ -1322,7 +1323,7 @@ function startGame() {
 
   if (isHost) {
     broadcast({ type: 'start_game' });
-    
+
     gameInterval = setInterval(() => {
       updateGame();
       renderGame();
@@ -1333,9 +1334,7 @@ function startGame() {
   timerInterval = setInterval(() => {
     gameTimer--;
     updateTimer();
-    if (gameTimer <= 0) {
-      endGame();
-    }
+    if (gameTimer <= 0) endGame();
   }, 1000);
 
   setupInputs();
@@ -1638,6 +1637,16 @@ document.addEventListener('DOMContentLoaded', () => {
   canvas = document.getElementById('game-canvas');
   ctx = canvas.getContext('2d');
 });
+window.createRoom = createRoom;
+window.joinRoom = joinRoom;
+window.showJoinModal = showJoinModal;
+window.closeJoinModal = closeJoinModal;
+window.startGame = startGame;
+window.leaveRoom = leaveRoom;
+window.voteQuit = voteQuit;
+window.sendChat = sendChat;
+window.copyRoomCode = copyRoomCode;
+window.backToLobby = backToLobby;
 </script>
 </body>
 </html>
