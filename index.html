@@ -7,6 +7,36 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
+#joystick-container {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  z-index: 999;
+  display: none; /* activé seulement mobile */
+}
+
+#joystick-base {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(108,99,255,0.3);
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+#joystick-stick {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6c63ff, #00d4ff);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 20px rgba(108,99,255,0.4);
+}
+  
 :root {
   --bg: #060609;
   --bg2: #0c0c12;
@@ -856,6 +886,65 @@ let mousePos = { x: 0, y: 0 };
 let canvas, ctx;
 
 // ============ UTILS ============
+function isMobile() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+if (isMobile()) {
+  document.getElementById('joystick-container').style.display = 'block';
+}
+
+let joystick = {
+  active: false,
+  startX: 0,
+  startY: 0,
+  dx: 0,
+  dy: 0
+};
+
+const base = document.getElementById('joystick-base');
+const stick = document.getElementById('joystick-stick');
+
+base.addEventListener('touchstart', (e) => {
+  joystick.active = true;
+  const t = e.touches[0];
+  joystick.startX = t.clientX;
+  joystick.startY = t.clientY;
+});
+
+base.addEventListener('touchmove', (e) => {
+  if (!joystick.active) return;
+
+  const t = e.touches[0];
+  const rect = base.getBoundingClientRect();
+
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  let dx = t.clientX - centerX;
+  let dy = t.clientY - centerY;
+
+  const max = 40;
+
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist > max) {
+    dx = dx / dist * max;
+    dy = dy / dist * max;
+  }
+
+  stick.style.transform = `translate(${dx}px, ${dy}px)`;
+
+  joystick.dx = dx / max;
+  joystick.dy = dy / max;
+});
+
+base.addEventListener('touchend', () => {
+  joystick.active = false;
+  joystick.dx = 0;
+  joystick.dy = 0;
+  stick.style.transform = `translate(-50%, -50%)`;
+});
+
 function genCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -1239,35 +1328,62 @@ function updateGameHost() {
   // Move host player
   if (players[myId]) {
     let dx = 0, dy = 0;
+
+    // clavier
     if (keys['w'] || keys['arrowup'] || keys['z']) dy -= MOVE_SPEED;
     if (keys['s'] || keys['arrowdown']) dy += MOVE_SPEED;
     if (keys['a'] || keys['arrowleft'] || keys['q']) dx -= MOVE_SPEED;
     if (keys['d'] || keys['arrowright']) dx += MOVE_SPEED;
-    if (dx && dy) { dx *= 0.707; dy *= 0.707; }
-    players[myId].x = Math.max(PLAYER_SIZE, Math.min(CANVAS_W - PLAYER_SIZE, players[myId].x + dx));
-    players[myId].y = Math.max(PLAYER_SIZE, Math.min(CANVAS_H - PLAYER_SIZE, players[myId].y + dy));
-    players[myId].angle = Math.atan2(mousePos.y - players[myId].y, mousePos.x - players[myId].x);
+
+    // 🕹️ joystick (AJOUT)
+    dx += (joystick?.dx || 0) * MOVE_SPEED;
+    dy += (joystick?.dy || 0) * MOVE_SPEED;
+
+    // normalisation diagonale
+    if (dx && dy) {
+      dx *= 0.707;
+      dy *= 0.707;
+    }
+
+    players[myId].x = Math.max(
+      PLAYER_SIZE,
+      Math.min(CANVAS_W - PLAYER_SIZE, players[myId].x + dx)
+    );
+
+    players[myId].y = Math.max(
+      PLAYER_SIZE,
+      Math.min(CANVAS_H - PLAYER_SIZE, players[myId].y + dy)
+    );
+
+    players[myId].angle = Math.atan2(
+      mousePos.y - players[myId].y,
+      mousePos.x - players[myId].x
+    );
   }
 
-  // Update bullets
+  // Bullets
   for (let i = bullets.length - 1; i >= 0; i--) {
     const b = bullets[i];
     b.x += b.vx;
     b.y += b.vy;
+
     if (b.x < 0 || b.x > CANVAS_W || b.y < 0 || b.y > CANVAS_H) {
       bullets.splice(i, 1);
       continue;
     }
-    // Collision
+
     for (const [pid, p] of Object.entries(players)) {
       if (pid === b.owner || !p.alive) continue;
+
       const dist = Math.sqrt((b.x - p.x) ** 2 + (b.y - p.y) ** 2);
+
       if (dist < PLAYER_SIZE) {
         p.hp--;
+
         if (p.hp <= 0) {
           p.alive = false;
           if (players[b.owner]) players[b.owner].score += 10;
-          // Respawn after 2s
+
           setTimeout(() => {
             if (players[pid]) {
               players[pid].alive = true;
@@ -1277,6 +1393,7 @@ function updateGameHost() {
             }
           }, 2000);
         }
+
         if (players[b.owner]) players[b.owner].score++;
         bullets.splice(i, 1);
         break;
@@ -1329,16 +1446,116 @@ function renderGame() {
   // Client movement
   if (!isHost && players[myId]) {
     let dx = 0, dy = 0;
+
+    // clavier
     if (keys['w'] || keys['arrowup'] || keys['z']) dy -= MOVE_SPEED;
     if (keys['s'] || keys['arrowdown']) dy += MOVE_SPEED;
     if (keys['a'] || keys['arrowleft'] || keys['q']) dx -= MOVE_SPEED;
     if (keys['d'] || keys['arrowright']) dx += MOVE_SPEED;
-    if (dx && dy) { dx *= 0.707; dy *= 0.707; }
-    players[myId].x = Math.max(PLAYER_SIZE, Math.min(CANVAS_W - PLAYER_SIZE, players[myId].x + dx));
-    players[myId].y = Math.max(PLAYER_SIZE, Math.min(CANVAS_H - PLAYER_SIZE, players[myId].y + dy));
-    players[myId].angle = Math.atan2(mousePos.y - players[myId].y, mousePos.x - players[myId].x);
-    connections['host']?.send({ type: 'move', x: players[myId].x, y: players[myId].y, angle: players[myId].angle });
+
+    // 🕹️ joystick
+    dx += (joystick?.dx || 0) * MOVE_SPEED;
+    dy += (joystick?.dy || 0) * MOVE_SPEED;
+
+    if (dx && dy) {
+      dx *= 0.707;
+      dy *= 0.707;
+    }
+
+    players[myId].x = Math.max(
+      PLAYER_SIZE,
+      Math.min(CANVAS_W - PLAYER_SIZE, players[myId].x + dx)
+    );
+
+    players[myId].y = Math.max(
+      PLAYER_SIZE,
+      Math.min(CANVAS_H - PLAYER_SIZE, players[myId].y + dy)
+    );
+
+    players[myId].angle = Math.atan2(
+      mousePos.y - players[myId].y,
+      mousePos.x - players[myId].x
+    );
+
+    connections['host']?.send({
+      type: 'move',
+      x: players[myId].x,
+      y: players[myId].y,
+      angle: players[myId].angle
+    });
   }
+
+  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // background grid
+  ctx.strokeStyle = 'rgba(108,99,255,0.06)';
+  ctx.lineWidth = 1;
+
+  for (let x = 0; x < CANVAS_W; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, CANVAS_H);
+    ctx.stroke();
+  }
+
+  for (let y = 0; y < CANVAS_H; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(CANVAS_W, y);
+    ctx.stroke();
+  }
+
+  // bullets
+  bullets.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, BULLET_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = b.color;
+    ctx.shadowColor = b.color;
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+
+  // players
+  Object.entries(players).forEach(([id, p]) => {
+    if (!p.alive) return;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, PLAYER_SIZE, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, PLAYER_SIZE + 2, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.stroke();
+
+    const gunLen = PLAYER_SIZE + 10;
+    ctx.beginPath();
+    ctx.moveTo(
+      p.x + Math.cos(p.angle) * PLAYER_SIZE * 0.5,
+      p.y + Math.sin(p.angle) * PLAYER_SIZE * 0.5
+    );
+    ctx.lineTo(
+      p.x + Math.cos(p.angle) * gunLen,
+      p.y + Math.sin(p.angle) * gunLen
+    );
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '600 11px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.name, p.x, p.y - PLAYER_SIZE - 10);
+  });
+
+  requestAnimationFrame(renderGame);
+}
 
   ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
@@ -1482,5 +1699,11 @@ document.getElementById('room-code-input').addEventListener('input', function() 
 });
 </script>
 
+<!-- JOYSTICK MOBILE -->
+<div id="joystick-container">
+  <div id="joystick-base">
+    <div id="joystick-stick"></div>
+  </div>
+</div>
 </body>
 </html>
