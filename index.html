@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>CapWorks Arena — Jeu Multijoueur</title>
+<title>Aranky — Arena Multijoueur</title>
+<link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAAAAAAAEAIAA4AQAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAP9JREFUeNrVl6sOwjAUhquWoGZ5PyS4yTlwPAeGBIFAYAiKoAgGcCCnx11wKZls1pb/nLWsiM8sp/2/XpKdiihqiDoRfy8Qx035M4EiDMWpACWYKsIOz7JcgSvBXjlFwCbB3naqgEmCFX7Y51o4EqwLt9setXAuJktgvTppqSyADF4uzlaoEmSB+exixbvAdHK14lVgPLpBeBMYDu4K376TBJBBYiMhKMcA7wAajkqQj6B2gX7vAYcXtU4FuumzBKeGLZAmL4WqdUYBk0TSfiuYJkXrSD+jTkuWME2M1pL6ATQcrSd3RC4FWD2hKwHnXbGr1jz8d0EQL6Ng3oY++ABmVVeVc89w6QAAAABJRU5ErkJggg==">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
@@ -493,6 +494,82 @@ header {
   border-radius: 8px; padding: 5px 12px; color: var(--red);
 }
 
+/* EMOTES BAR */
+.emote-btn {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: rgba(15,15,24,0.9);
+  border: 1px solid var(--border2);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 1.3rem; cursor: pointer; user-select: none;
+  transition: transform 0.12s, box-shadow 0.12s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  position: relative;
+}
+.emote-btn:hover, .emote-btn:active {
+  transform: scale(1.18);
+  box-shadow: 0 0 14px var(--accent-glow);
+  border-color: var(--accent);
+}
+.emote-btn .emote-key {
+  font-family: var(--font-mono); font-size: 0.5rem;
+  color: var(--text3); line-height: 1; margin-top: 1px;
+}
+.emote-btn.fired {
+  animation: emote-pop 0.25s ease;
+}
+@keyframes emote-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); box-shadow: 0 0 20px var(--accent-glow); }
+  100% { transform: scale(1); }
+}
+
+/* SPECTATOR badge in HUD */
+.spectator-hud-badge {
+  font-family: var(--font-mono); font-size: 0.72rem;
+  padding: 4px 10px; border-radius: 6px;
+  background: rgba(0,212,255,0.1); color: var(--cyan);
+  border: 1px solid rgba(0,212,255,0.3);
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+  0%,100% { opacity:1; } 50% { opacity:0.5; }
+}
+
+
+/* ─── EMOTE BUBBLE ─── */
+/* rendered on canvas, no CSS needed */
+
+/* ─── SPECTATOR BANNER ─── */
+.spectator-banner {
+  position:absolute; top:70px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,.75); border:1px solid rgba(108,99,255,.4);
+  border-radius:20px; padding:5px 16px;
+  font-family:var(--font-mono); font-size:.75rem; color:var(--accent);
+  display:none; align-items:center; gap:6px; pointer-events:none; z-index:10; white-space:nowrap;
+}
+.spectator-banner.show { display:flex; }
+.spec-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); animation:pulse-dot 1.5s infinite; }
+
+/* ─── EMOTES BAR (desktop) ─── */
+#emote-bar-desktop {
+  display:none; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; max-width:820px;
+}
+#emote-bar-desktop.show { display:flex; }
+.emote-hint { font-family:var(--font-mono); font-size:.7rem; color:var(--text3); margin-right:4px; }
+.emote-btn-sm { padding:4px 10px; border-radius:8px; background:var(--surface); border:1px solid var(--border); font-size:.9rem; cursor:pointer; transition:all .15s; user-select:none; display:flex; align-items:center; gap:4px; }
+.emote-btn-sm:hover { border-color:var(--accent); background:rgba(108,99,255,.1); }
+.emote-btn-sm .ekey { font-family:var(--font-mono); font-size:.6rem; color:var(--text3); }
+
+/* ─── EMOTES BAR (mobile) ─── */
+#emote-bar-mobile {
+  display:none; position:fixed; bottom:195px; left:50%; transform:translateX(-50%);
+  z-index:55; gap:7px;
+}
+#emote-bar-mobile.show { display:flex; }
+.emote-btn-mob { width:44px; height:44px; border-radius:50%; background:rgba(15,15,24,.9); border:1.5px solid var(--border2); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:1.2rem; cursor:pointer; transition:all .15s; user-select:none; position:relative; }
+.emote-btn-mob:active { border-color:var(--accent); transform:scale(1.15); }
+.emote-btn-mob .ekey-mob { position:absolute; bottom:1px; right:3px; font-family:var(--font-mono); font-size:.48rem; color:var(--text3); }
+
 /* RESPONSIVE */
 @media (max-width: 600px) {
   .lobby-title { font-size: 1.8rem; }
@@ -514,8 +591,8 @@ header {
 
 <header>
   <div class="logo">
-    <div class="logo-icon">CW</div>
-    CapWorks<span class="dot">Arena</span>
+    <div class="logo-icon">AR</div>
+    Aranky<span class="dot">.</span>
   </div>
   <div class="header-right">
     <a href="index.html">Accueil</a>
@@ -528,8 +605,8 @@ header {
 
 <!-- LOBBY SCREEN -->
 <div id="lobby-screen" class="screen active">
-  <div class="lobby-title">CapWorks Arena</div>
-  <div class="lobby-subtitle">Arène multijoueur en temps réel. 4 modes de jeu, joystick mobile, défie tes amis !</div>
+  <div class="lobby-title">Aranky Arena</div>
+  <div class="lobby-subtitle">Arène multijoueur en temps réel — 4 modes, joystick mobile, emotes &amp; spectateur.</div>
 
   <div class="nickname-section">
     <label for="nickname">Ton pseudo</label>
@@ -642,11 +719,20 @@ header {
     <div class="hud-right">
       <div class="hud-stat">Joueurs <span class="val" id="hud-players">0</span></div>
       <div class="alive-counter" id="alive-counter" style="display:none">🔴 <span id="alive-count">0</span> en vie</div>
+      <div class="spectator-hud-badge" id="spectator-badge" style="display:none">👁️ SPECTATEUR</div>
     </div>
   </div>
 
   <canvas id="game-canvas" width="800" height="500"></canvas>
+  <!-- Spectator banner -->
+  <div class="spectator-banner" id="spectator-banner">
+    <span class="spec-dot"></span> MODE SPECTATEUR — tu regardes la partie
+  </div>
   <div id="scoreboard" class="scoreboard"></div>
+  <!-- Desktop emote bar -->
+  <div id="emote-bar-desktop"></div>
+  <!-- Mobile emote bar -->
+  <div id="emote-bar-mobile"></div>
 </div>
 
 <!-- GAME OVER SCREEN -->
@@ -667,6 +753,11 @@ header {
     </div>
   </div>
   <div class="shoot-btn" id="shoot-btn">🔫</div>
+</div>
+
+<!-- EMOTES BAR -->
+<div id="emotes-bar" style="display:none;position:fixed;bottom:192px;left:50%;transform:translateX(-50%);z-index:51;display:none;gap:8px;flex-wrap:nowrap;">
+  <!-- filled by JS -->
 </div>
 
 <!-- TOAST -->
@@ -707,6 +798,15 @@ let zonePoints = {};
 let joystickActive = false, joystickOrigin = { x: 0, y: 0 };
 let joystickDelta = { x: 0, y: 0 };
 let mobileShootTriggered = false;
+let activeEmotes = {}; // { playerId -> { emoji, expireAt } }
+
+let isSpectator = false;
+
+
+// { playerId -> { emoji, expireAt } }
+let activeEmotes = {};
+
+let isSpectator = false;
 
 // ============ UTILS ============
 function genCode() {
@@ -738,6 +838,15 @@ function selectMode(mode, el) {
   el.classList.add('selected');
 }
 
+// ============ EMOTES ============
+const EMOTES = [
+  { key:'1', emoji:'😂', label:'LOL' },
+  { key:'2', emoji:'🔥', label:'Fire' },
+  { key:'3', emoji:'💀', label:'RIP' },
+  { key:'4', emoji:'👑', label:'King' },
+  { key:'5', emoji:'🤡', label:'Clown' },
+  { key:'6', emoji:'🫡', label:'Salut' },
+];
 const MODE_LABELS = { deathmatch:'Deathmatch', zone:'Zone', survival:'Survival', duel:'Duel BO3' };
 const MODE_SHORT = { deathmatch:'DM', zone:'ZONE', survival:'SURV', duel:'DUEL' };
 
@@ -763,7 +872,7 @@ async function createRoom() {
   setStatus('lobby-status', 'Création de la room...', '');
   roomCode = genCode();
   currentMode = selectedMode;
-  try { await initPeer('cwarena-' + roomCode); } catch(e) { setStatus('lobby-status', e.message, 'error'); return; }
+  try { await initPeer('aranky-' + roomCode); } catch(e) { setStatus('lobby-status', e.message, 'error'); return; }
   isHost = true;
   myColor = getRandomColor();
   players[myId] = { name: myName, color: myColor, score: 0, x: 0, y: 0, angle: 0, hp: 3, alive: true };
@@ -793,12 +902,22 @@ function handleHostData(peerId, data) {
       if (currentMode === 'duel') duelScores[peerId] = 0;
       if (currentMode === 'zone') zonePoints[peerId] = 0;
       broadcast({ type: 'player_list', players, roomCode, mode: currentMode });
+      // If game already running, tell this client to join as spectator
+      if (gameRunning) {
+        connections[peerId].send({ type: 'spectator_join', players, bullets, timer: gameTimer, mode: currentMode });
+      }
       renderPlayers(); updateOnlineCount();
-      addChatMsg(null, data.name + ' a rejoint.');
+      addChatMsg(null, data.name + (gameRunning ? ' a rejoint en tant que spectateur.' : ' a rejoint.'));
       break;
     case 'chat':
       const sender = players[peerId];
-      if (sender) { addChatMsg(sender.name, data.msg); broadcast({ type: 'chat', name: sender.name, msg: data.msg }); }
+      if (sender) {
+        addChatMsg(sender.name, data.msg);
+        // Send back to all peers; mark as echo for the original sender
+        Object.entries(connections).forEach(([pid, conn]) => {
+          try { conn.send({ type: 'chat', name: sender.name, msg: data.msg, _echo: pid === peerId }); } catch(e) {}
+        });
+      }
       break;
     case 'move':
       if (players[peerId] && gameRunning) {
@@ -807,6 +926,13 @@ function handleHostData(peerId, data) {
       break;
     case 'shoot':
       if (gameRunning) bullets.push({ x: data.x, y: data.y, vx: data.vx, vy: data.vy, owner: peerId, color: players[peerId]?.color || '#fff' });
+      break;
+    case 'emote':
+      if (players[peerId]) {
+        activeEmotes[peerId] = { emoji: data.emoji, expireAt: Date.now() + 2500 };
+        broadcast({ type: 'emote', peerId, emoji: data.emoji, name: players[peerId]?.name || '' });
+        addChatMsg(null, (players[peerId]?.name||'?') + ' ' + data.emoji);
+      }
       break;
     case 'leave':
       removePlayer(peerId);
@@ -842,10 +968,10 @@ async function joinRoom() {
   if (!code || code.length < 4) { setStatus('join-status', 'Code invalide.', 'error'); return; }
   roomCode = code;
   setStatus('join-status', 'Connexion...', '');
-  try { await initPeer('cwarena-client-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6)); }
+  try { await initPeer('aranky-client-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6)); }
   catch(e) { setStatus('join-status', e.message, 'error'); return; }
 
-  const conn = peer.connect('cwarena-' + roomCode, { reliable: true });
+  const conn = peer.connect('aranky-' + roomCode, { reliable: true });
   conn.on('open', () => {
     connections['host'] = conn;
     isHost = false; myColor = getRandomColor();
@@ -872,7 +998,18 @@ function handleClientData(data) {
         document.getElementById('hud-mode-label').textContent = MODE_SHORT[currentMode];
       }
       renderPlayers(); updateOnlineCount(); break;
-    case 'chat': addChatMsg(data.name, data.msg); break;
+    case 'spectator_join':
+      players = data.players; bullets = data.bullets || [];
+      gameTimer = data.timer; currentMode = data.mode || currentMode;
+      isSpectator = true;
+      document.getElementById('hud-mode-label').textContent = MODE_SHORT[currentMode];
+      startSpectatorClient(); break;
+    case 'emote':
+      activeEmotes[data.peerId] = { emoji: data.emoji, expireAt: Date.now() + 2600 };
+      if (data.name) addChatMsg(null, data.name + ' ' + data.emoji); break;
+    case 'chat':
+      if (data._echo && data.name === myName) break;
+      addChatMsg(data.name, data.msg); break;
     case 'game_start':
       players = data.players; currentMode = data.mode || currentMode;
       document.getElementById('hud-mode-label').textContent = MODE_SHORT[currentMode];
@@ -912,11 +1049,11 @@ function renderPlayers() {
 function updateOnlineCount() { document.getElementById('online-count').textContent = Object.keys(players).length; }
 function copyRoomCode() { navigator.clipboard.writeText(roomCode).then(() => showToast('Code copié !')); }
 
-function addChatMsg(author, msg) {
+function addChatMsg(author, msg, ownMessage = false) {
   const chat = document.getElementById('room-chat');
   const div = document.createElement('div');
   div.className = 'chat-msg';
-  if (author) div.innerHTML = `<span class="author">${author}:</span> ${msg}`;
+  if (author) div.innerHTML = `<span class="author" style="${ownMessage ? 'color:var(--accent)' : ''}">${author}:</span> ${msg}`;
   else div.innerHTML = `<span class="sys">${msg}</span>`;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
@@ -927,7 +1064,7 @@ function sendChat() {
   if (!msg) return;
   input.value = '';
   if (isHost) { addChatMsg(myName, msg); broadcast({ type: 'chat', name: myName, msg }); }
-  else { connections['host']?.send({ type: 'chat', msg }); addChatMsg(myName, msg); }
+  else { connections['host']?.send({ type: 'chat', msg }); addChatMsg(myName, msg, true); }
 }
 function leaveRoom() {
   if (!isHost) connections['host']?.send({ type: 'leave' });
@@ -938,11 +1075,16 @@ function backToLobby() {
   Object.values(connections).forEach(c => { try { c.close(); } catch(e){} });
   connections = {}; players = {}; bullets = [];
   if (peer) { peer.destroy(); peer = null; }
-  roomCode = ''; isHost = false; duelRound = 1; duelScores = {}; zonePoints = {}; eliminationOrder = [];
+  roomCode = ''; isHost = false; isSpectator = false; duelRound = 1; duelScores = {}; zonePoints = {}; eliminationOrder = []; activeEmotes = {};
+  document.getElementById('emotes-bar').style.display = 'none';
+  document.getElementById('spectator-badge').style.display = 'none';
   document.getElementById('room-chat').innerHTML = '';
   document.getElementById('start-btn').style.display = 'none';
   document.getElementById('replay-btn').style.display = 'none';
   showScreen('lobby-screen');
+  document.getElementById('spectator-banner').classList.remove('show');
+  document.getElementById('emote-bar-desktop').classList.remove('show');
+  document.getElementById('emote-bar-mobile').classList.remove('show');
   setStatus('lobby-status', '', '');
 }
 
@@ -990,18 +1132,59 @@ function startGame() {
   gameRunning = true;
 }
 
+function startSpectatorClient() {
+  canvas = document.getElementById('game-canvas');
+  ctx = canvas.getContext('2d');
+  gameRunning = true;
+  isSpectator = true;
+  document.getElementById('spectator-banner').classList.add('show');
+  document.getElementById('emote-bar-desktop').classList.remove('show');
+  document.getElementById('emote-bar-mobile').classList.remove('show');
+  document.getElementById('alive-counter').style.display = currentMode === 'survival' ? 'flex' : 'none';
+  showScreen('game-screen');
+  document.getElementById('mobile-controls').style.display = 'none';
+  document.getElementById('spectator-badge').style.display = '';
+  document.getElementById('emotes-bar').style.display = 'none';
+  const ac = document.getElementById('alive-counter');
+  ac.style.display = (currentMode === 'survival') ? 'flex' : 'none';
+  showToast('👁️ Mode Spectateur — regarde la partie !');
+  requestAnimationFrame(renderGame);
+}
+
+function startSpectatorClient() {
+  canvas = document.getElementById('game-canvas');
+  ctx = canvas.getContext('2d');
+  gameRunning = true;
+  document.getElementById('spectator-banner').classList.add('show');
+  document.getElementById('alive-counter').style.display = currentMode === 'survival' ? 'flex' : 'none';
+  document.getElementById('mobile-controls').style.display = 'none';
+  document.getElementById('emote-bar-mobile').classList.remove('show');
+  showGameScreen();
+  showToast('👁️ Spectateur — regarde la partie !');
+  requestAnimationFrame(renderGame);
+}
+
 function startGameClient() {
   canvas = document.getElementById('game-canvas');
   ctx = canvas.getContext('2d');
   gameRunning = true;
+  isSpectator = false;
   showScreen('game-screen');
-
-  // Show/hide alive counter
+  document.getElementById('spectator-badge').style.display = 'none';
   const ac = document.getElementById('alive-counter');
   ac.style.display = (currentMode === 'survival') ? 'flex' : 'none';
-
+  buildEmotesBar();
   setupControls();
   requestAnimationFrame(renderGame);
+}
+
+function showGameScreen() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('game-screen').classList.add('active');
+  if (!isSpectator) {
+    document.getElementById('emote-bar-desktop').classList.add('show');
+    document.getElementById('emote-bar-mobile').classList.add('show');
+  }
 }
 
 function stopGame() {
@@ -1142,9 +1325,52 @@ function doGameOver() {
   endGame(scores);
 }
 
+function buildEmotesBar() {
+  const bar = document.getElementById('emotes-bar');
+  bar.style.display = 'flex';
+  bar.innerHTML = EMOTES.map((e, i) => `
+    <div class="emote-btn" id="emote-btn-${i}" onclick="triggerEmoteByIndex(${i})" title="${e.label}">
+      <span>${e.emoji}</span>
+      <span class="emote-key">[${e.key}]</span>
+    </div>
+  `).join('');
+}
+
+function triggerEmoteByIndex(i) {
+  const btn = document.getElementById('emote-btn-' + i);
+  if (btn) { btn.classList.remove('fired'); void btn.offsetWidth; btn.classList.add('fired'); }
+  triggerEmote(EMOTES[i].emoji);
+}
+
+function triggerEmote(emoji) {
+  if (!players[myId]) return;
+  activeEmotes[myId] = { emoji, expireAt: Date.now() + 2500 };
+  if (isHost) {
+    broadcast({ type: 'emote', peerId: myId, emoji });
+  } else {
+    connections['host']?.send({ type: 'emote', emoji });
+  }
+}
+
+
+function triggerEmote(emoji) {
+  if (!gameRunning || isSpectator || !players[myId]) return;
+  activeEmotes[myId] = { emoji, expireAt: Date.now() + 2600 };
+  addChatMsg(null, myName + ' ' + emoji);
+  if (isHost) broadcast({ type: 'emote', peerId: myId, emoji, name: myName });
+  else connections['host']?.send({ type: 'emote', emoji });
+}
+
 // ============ CONTROLS ============
 function setupControls() {
-  document.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
+  document.addEventListener('keydown', (e) => {
+    keys[e.key.toLowerCase()] = true;
+    // Emotes via number keys 1-6
+    const emoteIdx = parseInt(e.key) - 1;
+    if (emoteIdx >= 0 && emoteIdx < EMOTES.length && gameRunning && !isSpectator) {
+      triggerEmoteByIndex(emoteIdx);
+    }
+  });
   document.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
   canvas.addEventListener('mousemove', (e) => {
@@ -1211,7 +1437,7 @@ function setupControls() {
 }
 
 function handleShoot(e) {
-  if (!gameRunning) return;
+  if (!gameRunning || isSpectator) return;
   const me = players[myId];
   if (!me || !me.alive) return;
 
@@ -1249,8 +1475,8 @@ canvas && canvas.addEventListener('touchstart', (e) => {
 function renderGame() {
   if (!gameRunning) return;
 
-  // Client movement (prediction)
-  if (!isHost && players[myId]) {
+  // Client movement (prediction) — pas en spectateur
+  if (!isHost && !isSpectator && players[myId]) {
     let dx = 0, dy = 0;
     if (keys['w'] || keys['arrowup'] || keys['z']) dy -= MOVE_SPEED;
     if (keys['s'] || keys['arrowdown']) dy += MOVE_SPEED;
@@ -1266,6 +1492,16 @@ function renderGame() {
   }
 
   ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+
+  // Spectator vignette
+  if (isSpectator) {
+    ctx.save();
+    const vg = ctx.createRadialGradient(CANVAS_W/2, CANVAS_H/2, CANVAS_H*0.3, CANVAS_W/2, CANVAS_H/2, CANVAS_H*0.9);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,20,0.42)');
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H); ctx.restore();
+  }
 
   // Background grid
   ctx.strokeStyle = 'rgba(108,99,255,0.06)';
@@ -1383,6 +1619,22 @@ function renderGame() {
     const hpRatio = Math.max(0, p.hp / maxHp);
     ctx.fillStyle = hpRatio > 0.5 ? '#00f593' : hpRatio > 0.25 ? '#ffc947' : '#ff4d6d';
     ctx.fillRect(hpX, hpY, hpW * hpRatio, hpH);
+    // ─── EMOTE BUBBLE ───
+    const emoteData = activeEmotes[id];
+    if (emoteData && Date.now() < emoteData.expireAt) {
+      const age = 1 - (emoteData.expireAt - Date.now()) / 2600;
+      const yOff = Math.min(age * 38, 28);
+      const alpha = age > 0.72 ? (1 - (age - 0.72) / 0.28) : 1;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      const ey = p.y - PLAYER_SIZE - 26 - yOff;
+      ctx.fillStyle = 'rgba(15,15,24,0.85)';
+      ctx.beginPath(); ctx.roundRect(p.x - 18, ey - 19, 36, 25, 7); ctx.fill();
+      ctx.strokeStyle = 'rgba(108,99,255,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.font = '15px serif'; ctx.textAlign = 'center';
+      ctx.fillText(emoteData.emoji, p.x, ey - 1);
+      ctx.restore();
+    }
     // Zone score (zone mode)
     if (currentMode === 'zone') {
       ctx.fillStyle = 'rgba(0,212,255,0.8)'; ctx.font = '700 10px JetBrains Mono, monospace';
@@ -1390,8 +1642,45 @@ function renderGame() {
     }
   });
 
-  // Crosshair (desktop)
-  if (!joystickActive) {
+  // Emotes flottantes
+  const now = Date.now();
+  Object.entries(activeEmotes).forEach(([id, e]) => {
+    if (now > e.expireAt) { delete activeEmotes[id]; return; }
+    const p = players[id];
+    if (!p) return;
+    const remaining = (e.expireAt - now) / 2500;
+    const alpha = remaining > 0.2 ? 1 : remaining / 0.2;
+    const floatY = (1 - remaining) * 20; // monte au fil du temps
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = '26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 6;
+    ctx.fillText(e.emoji, p.x, p.y - PLAYER_SIZE - 28 - floatY);
+    ctx.restore();
+  });
+
+  // Overlay spectateur
+  if (isSpectator) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    // Badge spectateur centré en haut
+    ctx.fillStyle = 'rgba(10,10,20,0.75)';
+    const bw = 200, bh = 28, bx = CANVAS_W/2 - bw/2, by = 8;
+    ctx.beginPath();
+    ctx.roundRect(bx, by, bw, bh, 6);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(0,212,255,0.9)';
+    ctx.font = '700 12px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('👁️  MODE SPECTATEUR', CANVAS_W / 2, by + 18);
+    ctx.restore();
+  }
+
+  // Crosshair (desktop, seulement si pas spectateur)
+  if (!joystickActive && !isSpectator) {
     ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(mousePos.x, mousePos.y, 11, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath();
@@ -1439,12 +1728,35 @@ function endGame(scores) {
 }
 
 // ============ INPUT VALIDATION ============
+
+function buildEmoteBars() {
+  const ebd = document.getElementById('emote-bar-desktop');
+  ebd.innerHTML = '<span class="emote-hint">Emotes :</span>';
+  EMOTES.forEach(e => {
+    const btn = document.createElement('div');
+    btn.className = 'emote-btn-sm';
+    btn.innerHTML = e.emoji + ' <span class="ekey">[' + e.key + ']</span>';
+    btn.addEventListener('click', () => triggerEmote(e.emoji));
+    ebd.appendChild(btn);
+  });
+  const ebm = document.getElementById('emote-bar-mobile');
+  ebm.innerHTML = '';
+  EMOTES.forEach(e => {
+    const btn = document.createElement('div');
+    btn.className = 'emote-btn-mob';
+    btn.innerHTML = e.emoji + '<span class="ekey-mob">' + e.key + '</span>';
+    btn.addEventListener('touchstart', ev => { ev.preventDefault(); triggerEmote(e.emoji); }, { passive: false });
+    ebm.appendChild(btn);
+  });
+}
+
 document.getElementById('nickname').addEventListener('input', function() {
   this.value = this.value.replace(/[^a-zA-Z0-9_\-àâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ ]/g, '');
 });
 document.getElementById('room-code-input').addEventListener('input', function() {
   this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
 });
+buildEmoteBars();
 
 // ============ CANVAS TOUCH SHOOT ============
 document.getElementById('game-canvas').addEventListener('touchend', (e) => {
