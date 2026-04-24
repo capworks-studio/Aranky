@@ -1296,7 +1296,7 @@ function closeJoinModal() {
 
 // ============ GAME ============
 function startGame() {
-  if (isHost && Object.keys(players).< 2) {
+  if (isHost && Object.keys(players).length < 2)
     showToast('Au moins 2 joueurs requis');
     return;
   }
